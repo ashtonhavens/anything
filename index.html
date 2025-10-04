@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                background-color: black;
+                background: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgYPlv7KuTs1q7ipgDuntdUK7fqu1P3nb0aA&s');
+                color: white;
+            }
+            #menu {
+                position: absolute;
+                top: 0;
+                left: 0;
+                
+                width: 400px;
+                height: 100vh;
+                background: linear-gradient(to bottom right, #153355, #090a35);
+                border-right: #052735 1px solid;
+                
+                text-align: center;
+            }
+
+
+
+            #cube {
+                position: absolute;
+                width: 100px;
+                height: 100px;
+                background-color: white;
+            }
+            #circle {
+                position: absolute;
+                width: 100px;
+                height: 100px;
+                background-color: white;
+                border-radius: 50%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="menu">
+            <h1>ANYTHING</h1>
+            <div>Acceleration: 1cm/s/s</div>
+            <div>X Velocity: <span id="xvel">0</span>m/s</div>
+            <div>Y Velocity: <span id="yvel">0</span>m/s</div>
+            <div>Gs of force experienced: <span id="gs">0</span></div>
+            <div>fps: <span id="fps">0</span></div>
+        </div>
+        <div id="cube"></div>
+        <div id="circle"></div>
+
+        <script>
+            const cube = document.getElementById('cube');
+
+            const xvel_stat = document.getElementById('xvel');
+            const yvel_stat = document.getElementById('yvel');
+            const gs_stat = document.getElementById('gs');
+            const fps_stat = document.getElementById('fps');
+
+            const canvas_offset = -400;
+
+            var obj = 'cube';
+            var object_current = 0;
+            const object_sheet = ['cube', 'sphere'];
+
+            var objects = {
+                'cube': {
+                    'element': document.getElementById('cube'),
+                    'pos': [0, 0],
+                    'vel': [0, 0],
+                    'accel': 0.05,
+                    'friction': 1,
+                    'bounce': 0.5
+                },
+                'sphere': {
+                    'element': document.getElementById('circle'),
+                    'pos': [0, 0],
+                    'vel': [0, 0],
+                    'accel': 0.05,
+                    'friction': 1,
+                    'bounce': 0.5
+                }
+            }
+
+            var accel = 0.05;
+            var friction = 1;
+            var bounce = 0.5;
+
+            var keys = {};
+
+
+            onkeydown = (e) => {
+                keys[e.key.toLowerCase()] = true;
+            };
+            onkeyup = (e) => {
+                keys[e.key.toLowerCase()] = false;
+            };
+            onkeypress = (e) => {
+                if (e.key == ' ') {
+
+                } else if (e.key == 'Enter') {
+                    if (object_current+1 >= object_sheet.length) {
+                        object_current = 0;
+                    } else {
+                        object_current += 1;
+                    }
+                    obj = object_sheet[object_current];
+                    console.log(object_current);
+                }
+            }
+
+            var old_time = Date.now();
+
+            var ftime = 0;
+            
+            function frame() {
+                ftime += 1;
+
+                var new_time = Date.now();
+                var dtime = new_time - old_time;
+                var converted_accel = accel * dtime;
+
+                if ((keys['w'] || keys['arrowup']) && objects[obj].vel[1] > -40 && objects[obj].pos[1] > 0) objects[obj].vel[1] += -converted_accel;
+                if ((keys['a'] || keys['arrowleft']) && objects[obj].vel[0] > -40 && objects[obj].pos[0] > 0) objects[obj].vel[0] += -converted_accel;
+                if ((keys['s'] || keys['arrowdown']) && objects[obj].vel[1] < 40 && objects[obj].pos[1] < (innerHeight)-objects[obj].element.offsetHeight) objects[obj].vel[1] += converted_accel;
+                if ((keys['d'] || keys['arrowright']) && objects[obj].vel[0] < 40 && objects[obj].pos[0] < (innerWidth+canvas_offset)-objects[obj].element.offsetWidth) objects[obj].vel[0] += converted_accel;
+
+
+                for (let i in objects) {
+                    let o = objects[i];
+
+                    o.pos[0] += o.vel[0];
+                    o.pos[1] += o.vel[1];
+
+
+                    if (o.vel[0] < 0 && o.pos[0] < 0) {
+                        o.pos[0] = -o.pos[0];
+                        o.vel[0] = -o.vel[0] * bounce;
+                    } else if (o.pos[0] + o.element.offsetWidth >= (innerWidth + canvas_offset)) {
+                        o.pos[0] = 2*(innerWidth + canvas_offset) - 2*(o.element.offsetWidth) - o.pos[0];
+                        o.vel[0] = -o.vel[0] * bounce;
+                    }
+                    if (o.vel[1] < 0 && o.pos[1] < 0) {
+                        o.pos[1] = -o.pos[1];
+                        o.vel[1] = -o.vel[1] * bounce;
+                    } else if (o.pos[1] + o.element.offsetHeight >= innerHeight) {
+                        o.pos[1] = 2*innerHeight - (o.element.offsetHeight)*2 - o.pos[1];
+                        o.vel[1] = -o.vel[1] * bounce;
+                    }
+
+
+                    o.vel[0] *= friction;
+                    o.vel[1] *= friction;
+
+                    o.element.style.left = `${o.pos[0] - canvas_offset}px`;
+                    o.element.style.top = `${o.pos[1]}px`;
+                }
+
+                old_time = Date.now();
+
+                xvel_stat.innerText = Math.abs((objects[obj].vel[0]*1000|0)/1000);
+                yvel_stat.innerText = Math.abs((objects[obj].vel[1]*1000|0)/1000);
+                gs_stat.innerText = Math.abs((Math.sqrt(objects[obj].vel[1]**2 + objects[obj].vel[0]**2)/9.8*1000|0)/1000);
+                if (ftime % 10 == 1) {
+                    fps_stat.innerText = 1/dtime * 1000 | 0;
+                }
+
+                requestAnimationFrame(frame);
+            }
+            frame();
+        </script>
+    </body>
+</html>
