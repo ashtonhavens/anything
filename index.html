@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <title>ANYTHING</title>
+
         <style>
             body {
                 background-color: black;
@@ -19,6 +21,24 @@
                 
                 text-align: center;
             }
+            #panel {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100vw;
+                height: 350px;
+                background: linear-gradient(to top, #0d155a9a, #0d155a00);
+            }
+            #velocity {
+                position: absolute;
+                bottom: 50px;
+                left: 250px;
+                text-align: center;
+            }
+            #velocity img {
+                width: 75px;
+                height: 75px;
+            }
 
 
 
@@ -26,28 +46,30 @@
                 position: absolute;
                 width: 100px;
                 height: 100px;
-                background-color: white;
+                background-color: blue;
             }
             #circle {
                 position: absolute;
                 width: 100px;
                 height: 100px;
-                background-color: white;
+                background-color: orange;
                 border-radius: 50%;
             }
         </style>
     </head>
     <body>
-        <div id="menu">
-            <h1>ANYTHING</h1>
-            <div>Acceleration: 1cm/s/s</div>
-            <div>X Velocity: <span id="xvel">0</span>m/s</div>
-            <div>Y Velocity: <span id="yvel">0</span>m/s</div>
-            <div>Gs of force experienced: <span id="gs">0</span></div>
-            <div>fps: <span id="fps">0</span></div>
-        </div>
         <div id="cube"></div>
         <div id="circle"></div>
+
+
+        <div id="panel">
+            <div id="velocity">
+                <img id="arrow_stat" src="graphics/everything_arrow.svg" />
+                <div>
+                    <span id="vel_stat">0</span><i>m/s</i>
+                </div>
+            </div>
+        </div>
 
         <script>
             const cube = document.getElementById('cube');
@@ -57,7 +79,10 @@
             const gs_stat = document.getElementById('gs');
             const fps_stat = document.getElementById('fps');
 
-            const canvas_offset = -400;
+            const arrow_stat = document.getElementById('arrow_stat');
+            const vel_stat = document.getElementById('vel_stat');
+
+            const canvas_offset = 0;
 
             var obj = 'cube';
             var object_current = 0;
@@ -105,13 +130,28 @@
                         object_current += 1;
                     }
                     obj = object_sheet[object_current];
-                    console.log(object_current);
+                    
+                    let ele = objects[obj].element;
+                    ele.style.backgroundColor = 'white';
+                    requestAnimationFrame(() => {
+                        ele.style.transition = 'background-color 0.5s linear';
+                        requestAnimationFrame(() => {
+                            ele.style.backgroundColor = 'red';
+                        })
+                        setTimeout(() => {
+                            ele.style.transition = 'none';
+                        }, 500)
+                    });
                 }
             }
 
             var old_time = Date.now();
 
             var ftime = 0;
+
+
+
+
             
             function frame() {
                 ftime += 1;
@@ -119,11 +159,12 @@
                 var new_time = Date.now();
                 var dtime = new_time - old_time;
                 var converted_accel = accel * dtime;
+                old_time = new_time;
 
-                if ((keys['w'] || keys['arrowup']) && objects[obj].vel[1] > -40 && objects[obj].pos[1] > 0) objects[obj].vel[1] += -converted_accel;
-                if ((keys['a'] || keys['arrowleft']) && objects[obj].vel[0] > -40 && objects[obj].pos[0] > 0) objects[obj].vel[0] += -converted_accel;
-                if ((keys['s'] || keys['arrowdown']) && objects[obj].vel[1] < 40 && objects[obj].pos[1] < (innerHeight)-objects[obj].element.offsetHeight) objects[obj].vel[1] += converted_accel;
-                if ((keys['d'] || keys['arrowright']) && objects[obj].vel[0] < 40 && objects[obj].pos[0] < (innerWidth+canvas_offset)-objects[obj].element.offsetWidth) objects[obj].vel[0] += converted_accel;
+                if ((keys['w'] || keys['arrowup']) && /*objects[obj].vel[1] > -40 &&*/ objects[obj].pos[1] > 0) objects[obj].vel[1] += -converted_accel;
+                if ((keys['a'] || keys['arrowleft']) && /*objects[obj].vel[0] > -40 &&*/ objects[obj].pos[0] > 0) objects[obj].vel[0] += -converted_accel;
+                if ((keys['s'] || keys['arrowdown']) && /*objects[obj].vel[1] < 40 &&*/ objects[obj].pos[1] < (innerHeight)-objects[obj].element.offsetHeight) objects[obj].vel[1] += converted_accel;
+                if ((keys['d'] || keys['arrowright']) && /*objects[obj].vel[0] < 40 &&*/ objects[obj].pos[0] < (innerWidth+canvas_offset)-objects[obj].element.offsetWidth) objects[obj].vel[0] += converted_accel;
 
 
                 for (let i in objects) {
@@ -154,18 +195,22 @@
 
                     o.element.style.left = `${o.pos[0] - canvas_offset}px`;
                     o.element.style.top = `${o.pos[1]}px`;
+
                 }
+                
+                arrow_stat.style.transform = `rotate(${(Math.atan2(objects[obj].vel[1], objects[obj].vel[0]) * 180/Math.PI + 90) % 360}deg)`;
+                vel_stat.innerText = Math.sqrt(objects[obj].vel[0]**2 + objects[obj].vel[1]**2) | 0;
 
-                old_time = Date.now();
 
-                xvel_stat.innerText = Math.abs((objects[obj].vel[0]*1000|0)/1000);
-                yvel_stat.innerText = Math.abs((objects[obj].vel[1]*1000|0)/1000);
-                gs_stat.innerText = Math.abs((Math.sqrt(objects[obj].vel[1]**2 + objects[obj].vel[0]**2)/9.8*1000|0)/1000);
+                //xvel_stat.innerText = Math.abs((objects[obj].vel[0]*1000|0)/1000);
+                //yvel_stat.innerText = Math.abs((objects[obj].vel[1]*1000|0)/1000);
+                //gs_stat.innerText = Math.abs((Math.sqrt(objects[obj].vel[1]**2 + objects[obj].vel[0]**2)/9.8*1000|0)/1000);
                 if (ftime % 10 == 1) {
-                    fps_stat.innerText = 1/dtime * 1000 | 0;
+                //    fps_stat.innerText = 1/dtime * 1000 | 0;
                 }
 
                 requestAnimationFrame(frame);
+                //setTimeout(frame, 500);
             }
             frame();
         </script>
