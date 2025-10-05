@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>ANYTHING</title>
+        <title>ANYTHING ISS Simulation</title>
+
+        <link rel="icon" type="image/x-icon" href="favicon.ico">
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,28 +26,40 @@
                 padding: 1px 5px 1px 5px;
                 font-style: italic;
             }
-            #menu {
+            .menu {
                 position: absolute;
-                top: 10px;
-                left: 10px;
                 padding: 0 25px 35px 25px;
                 font-size: 20px;
                 text-shadow: 0 1px 5px #000000b4;
-
+                top: 10px;
+                
                 width: 250px;
                 background-color: #000000b7;
                 box-shadow: 0 5px 10px #0000009a;
                 backdrop-filter: blur(10px);
-
-
+                
+                
                 box-sizing: border-box;
                 z-index: 100;
                 border-radius: 10px;
             }
-            #menu h1 {
+            #menu {
+                left: 10px;
+            }
+            .menu h1 {
                 font-size: 25px;
                 text-decoration: underline;
             }
+            #attribution {
+                left: 270px;
+                font-size: 15px;
+                opacity: 0;
+                transition: all 0.2s ease;
+            }
+            .menu a {
+                font-size: 15px;
+            }
+            
             #panel {
                 position: absolute;
                 bottom: 0;
@@ -107,10 +121,19 @@
         </style>
     </head>
     <body>
-        <div id="menu">
+        <div id="menu" class="menu">
             <h1>Controls</h1>
             <span class="key">WASD or Arrows</span>: Movement<br /><br/>
-            <span class="key">Space</span>: Toggle Gravity
+            <span class="key">Space</span>: Toggle Artificial Gravity<br>
+            <a href="javascript:attribute()">Asset Attribution</a>
+        </div>
+        <div id="attribution" class="menu">
+            <h1>Attribution</h1>
+            "Apple PNG" by Pngtree<br><br>
+            Thruster image by iSpace<br><br>
+            "Flame PNG Transparent Background" by Free Icons PNG<br><br>
+            ISS Photograph by NASA<br><br>
+            "RocketThrustMaxx" sound by Maxx222 on Pixabay
         </div>
 
         <div id="cube">
@@ -126,6 +149,11 @@
             const f2 = document.getElementById('f2');
             const f3 = document.getElementById('f3');
             const f4 = document.getElementById('f4');
+
+            const thrust_sound = new Audio('sound/rocket.ogg');
+            thrust_sound.volume = 0;
+            thrust_sound.loop = true;
+            thrust_sound.play();
 
             const canvas_offset = 0;
 
@@ -153,6 +181,14 @@
             var gravity = false;
 
 
+            const attribution = document.getElementById('attribution');
+            var attributed = false;
+            function attribute() {
+                attributed = !attributed;
+                attribution.style.opacity = attributed ? 1 : 0;
+            }
+
+
             onkeydown = (e) => {
                 keys[e.key.toLowerCase()] = true;
             };
@@ -178,6 +214,7 @@
             
             function frame() {
                 ftime += 1;
+                var volume = 0;
 
                 var new_time = Date.now();
                 var dtime = new_time - old_time;
@@ -187,27 +224,33 @@
                 if ((keys['w'] || keys['arrowup']) && /*objects[obj].vel[1] > -40 &&*/ objects[obj].pos[1] > 0) {
                     objects[obj].vel[1] += -converted_accel;
                     f3.style.opacity = 1;
+                    volume += 0.25;
                 } else {
                     f3.style.opacity = 0;
                 }
                 if ((keys['a'] || keys['arrowleft']) && /*objects[obj].vel[0] > -40 &&*/ objects[obj].pos[0] > 0) {
                     objects[obj].vel[0] += -converted_accel;
                     f2.style.opacity = 1;
+                    volume += 0.25;
                 } else {
                     f2.style.opacity = 0;
                 }
                 if ((keys['s'] || keys['arrowdown']) && /*objects[obj].vel[1] < 40 &&*/ objects[obj].pos[1] < (innerHeight)-objects[obj].element.offsetHeight) {
                     objects[obj].vel[1] += converted_accel;
                     f1.style.opacity = 1;
+                    volume += 0.25;
                 } else {
                     f1.style.opacity = 0;
                 }
                 if ((keys['d'] || keys['arrowright']) && /*objects[obj].vel[0] < 40 &&*/ objects[obj].pos[0] < (innerWidth+canvas_offset)-objects[obj].element.offsetWidth) {
                     objects[obj].vel[0] += converted_accel;
                     f4.style.opacity = 1;
+                    volume += 0.25;
                 } else {
                     f4.style.opacity = 0;
                 }
+
+                thrust_sound.volume = volume;
 
                 if (gravity) {
                     objects[obj].vel[1] += converted_accel / 1.5;

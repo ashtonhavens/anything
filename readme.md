@@ -1,7 +1,7 @@
-# hello this is our code for nasa
+# Team ANYTHING - NASA Space Apps El Centro
 
 https://anything.earth/
 
-OR
+or
 
 https://ashtonhavens.github.io/anything
