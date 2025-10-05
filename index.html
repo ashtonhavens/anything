@@ -3,23 +3,48 @@
     <head>
         <title>ANYTHING</title>
 
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
         <style>
+            @import url('https://fonts.googleapis.com/css2?family=SUSE+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
             body {
                 background-color: black;
-                background: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgYPlv7KuTs1q7ipgDuntdUK7fqu1P3nb0aA&s');
+                background: url('graphics/4499.webp') 50%/cover no-repeat fixed;
                 color: white;
+                font-family: 'Poppins', sans-serif;
+                overflow: hidden;
+            }
+            .key {
+                font-family: 'SUSE Mono', monospace;
+                background-color: #00000067;
+                border-radius: 10px;
+                padding: 1px 5px 1px 5px;
+                font-style: italic;
             }
             #menu {
                 position: absolute;
-                top: 0;
-                left: 0;
-                
-                width: 400px;
-                height: 100vh;
-                background: linear-gradient(to bottom right, #153355, #090a35);
-                border-right: #052735 1px solid;
-                
-                text-align: center;
+                top: 10px;
+                left: 10px;
+                padding: 0 25px 35px 25px;
+                font-size: 20px;
+                text-shadow: 0 1px 5px #000000b4;
+
+                width: 250px;
+                background-color: #000000b7;
+                box-shadow: 0 5px 10px #0000009a;
+                backdrop-filter: blur(10px);
+
+
+                box-sizing: border-box;
+                z-index: 100;
+                border-radius: 10px;
+            }
+            #menu h1 {
+                font-size: 25px;
+                text-decoration: underline;
             }
             #panel {
                 position: absolute;
@@ -46,59 +71,71 @@
                 position: absolute;
                 width: 100px;
                 height: 100px;
-                background-color: blue;
+                filter: drop-shadow(0px 7px 7px #0000009a);
             }
-            #circle {
+            #apple {
+                position: relative;
+                top: -9px;
+            }
+
+
+
+            .flame {
                 position: absolute;
-                width: 100px;
-                height: 100px;
-                background-color: orange;
-                border-radius: 50%;
+                z-index: -1;
+                transition: all linear 0.1s;
+            }
+            #f1 {
+                top: -36px;
+                left: calc(50% - 15px);
+            }
+            #f2 {
+                top: calc(50% - 22px);
+                transform: rotate(90deg);
+                left: calc(100% - 4px);
+            }
+            #f3 {
+                top: calc(100% - 13px);
+                left: calc(50% - 16px);
+                transform: rotate(180deg);
+            }
+            #f4 {
+                top: calc(50% - 25px);
+                transform: rotate(270deg);
+                left: -25px;
             }
         </style>
     </head>
     <body>
-        <div id="cube"></div>
-        <div id="circle"></div>
+        <div id="menu">
+            <h1>Controls</h1>
+            <span class="key">WASD or Arrows</span>: Movement<br /><br/>
+            <span class="key">Space</span>: Toggle Gravity
+        </div>
 
-
-        <div id="panel">
-            <div id="velocity">
-                <img id="arrow_stat" src="graphics/everything_arrow.svg" />
-                <div>
-                    <span id="vel_stat">0</span><i>m/s</i>
-                </div>
-            </div>
+        <div id="cube">
+            <img src="graphics/apple_thruster.png" id="apple" height="109"/>
+            <img src="graphics/flame.png" width="30" class="flame" id="f1" />
+            <img src="graphics/flame.png" width="30" class="flame" id="f2"/>
+            <img src="graphics/flame.png" width="30" class="flame" id="f3"/>
+            <img src="graphics/flame.png" width="30" class="flame" id="f4"/>
         </div>
 
         <script>
-            const cube = document.getElementById('cube');
-
-            const xvel_stat = document.getElementById('xvel');
-            const yvel_stat = document.getElementById('yvel');
-            const gs_stat = document.getElementById('gs');
-            const fps_stat = document.getElementById('fps');
-
-            const arrow_stat = document.getElementById('arrow_stat');
-            const vel_stat = document.getElementById('vel_stat');
+            const f1 = document.getElementById('f1');
+            const f2 = document.getElementById('f2');
+            const f3 = document.getElementById('f3');
+            const f4 = document.getElementById('f4');
 
             const canvas_offset = 0;
 
-            var obj = 'cube';
+            var obj = 'apple';
             var object_current = 0;
-            const object_sheet = ['cube', 'sphere'];
+            const object_sheet = ['apple'];
 
             var objects = {
-                'cube': {
+                'apple': {
                     'element': document.getElementById('cube'),
-                    'pos': [0, 0],
-                    'vel': [0, 0],
-                    'accel': 0.05,
-                    'friction': 1,
-                    'bounce': 0.5
-                },
-                'sphere': {
-                    'element': document.getElementById('circle'),
                     'pos': [0, 0],
                     'vel': [0, 0],
                     'accel': 0.05,
@@ -108,10 +145,12 @@
             }
 
             var accel = 0.05;
-            var friction = 1;
+            var friction = .995;
             var bounce = 0.5;
 
             var keys = {};
+
+            var gravity = false;
 
 
             onkeydown = (e) => {
@@ -122,32 +161,16 @@
             };
             onkeypress = (e) => {
                 if (e.key == ' ') {
-
-                } else if (e.key == 'Enter') {
-                    if (object_current+1 >= object_sheet.length) {
-                        object_current = 0;
-                    } else {
-                        object_current += 1;
-                    }
-                    obj = object_sheet[object_current];
-                    
-                    let ele = objects[obj].element;
-                    ele.style.backgroundColor = 'white';
-                    requestAnimationFrame(() => {
-                        ele.style.transition = 'background-color 0.5s linear';
-                        requestAnimationFrame(() => {
-                            ele.style.backgroundColor = 'red';
-                        })
-                        setTimeout(() => {
-                            ele.style.transition = 'none';
-                        }, 500)
-                    });
+                    gravity = !gravity;
                 }
             }
 
             var old_time = Date.now();
 
             var ftime = 0;
+
+            const cut_y = 20;
+            const cut_x = 30;
 
 
 
@@ -161,10 +184,34 @@
                 var converted_accel = accel * dtime;
                 old_time = new_time;
 
-                if ((keys['w'] || keys['arrowup']) && /*objects[obj].vel[1] > -40 &&*/ objects[obj].pos[1] > 0) objects[obj].vel[1] += -converted_accel;
-                if ((keys['a'] || keys['arrowleft']) && /*objects[obj].vel[0] > -40 &&*/ objects[obj].pos[0] > 0) objects[obj].vel[0] += -converted_accel;
-                if ((keys['s'] || keys['arrowdown']) && /*objects[obj].vel[1] < 40 &&*/ objects[obj].pos[1] < (innerHeight)-objects[obj].element.offsetHeight) objects[obj].vel[1] += converted_accel;
-                if ((keys['d'] || keys['arrowright']) && /*objects[obj].vel[0] < 40 &&*/ objects[obj].pos[0] < (innerWidth+canvas_offset)-objects[obj].element.offsetWidth) objects[obj].vel[0] += converted_accel;
+                if ((keys['w'] || keys['arrowup']) && /*objects[obj].vel[1] > -40 &&*/ objects[obj].pos[1] > 0) {
+                    objects[obj].vel[1] += -converted_accel;
+                    f3.style.opacity = 1;
+                } else {
+                    f3.style.opacity = 0;
+                }
+                if ((keys['a'] || keys['arrowleft']) && /*objects[obj].vel[0] > -40 &&*/ objects[obj].pos[0] > 0) {
+                    objects[obj].vel[0] += -converted_accel;
+                    f2.style.opacity = 1;
+                } else {
+                    f2.style.opacity = 0;
+                }
+                if ((keys['s'] || keys['arrowdown']) && /*objects[obj].vel[1] < 40 &&*/ objects[obj].pos[1] < (innerHeight)-objects[obj].element.offsetHeight) {
+                    objects[obj].vel[1] += converted_accel;
+                    f1.style.opacity = 1;
+                } else {
+                    f1.style.opacity = 0;
+                }
+                if ((keys['d'] || keys['arrowright']) && /*objects[obj].vel[0] < 40 &&*/ objects[obj].pos[0] < (innerWidth+canvas_offset)-objects[obj].element.offsetWidth) {
+                    objects[obj].vel[0] += converted_accel;
+                    f4.style.opacity = 1;
+                } else {
+                    f4.style.opacity = 0;
+                }
+
+                if (gravity) {
+                    objects[obj].vel[1] += converted_accel / 1.5;
+                }
 
 
                 for (let i in objects) {
@@ -198,8 +245,8 @@
 
                 }
                 
-                arrow_stat.style.transform = `rotate(${(Math.atan2(objects[obj].vel[1], objects[obj].vel[0]) * 180/Math.PI + 90) % 360}deg)`;
-                vel_stat.innerText = Math.sqrt(objects[obj].vel[0]**2 + objects[obj].vel[1]**2) | 0;
+                //arrow_stat.style.transform = `rotate(${(Math.atan2(objects[obj].vel[1], objects[obj].vel[0]) * 180/Math.PI + 90) % 360}deg)`;
+                //vel_stat.innerText = Math.sqrt(objects[obj].vel[0]**2 + objects[obj].vel[1]**2) | 0;
 
 
                 //xvel_stat.innerText = Math.abs((objects[obj].vel[0]*1000|0)/1000);
